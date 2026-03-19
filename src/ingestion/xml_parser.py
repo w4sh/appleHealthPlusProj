@@ -1,7 +1,7 @@
 """XML parser for Apple Health data."""
 
 import xml.etree.ElementTree as ET
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 
 def parse_step_count(xml_path: str) -> List[Dict[str, str]]:
@@ -12,13 +12,17 @@ def parse_step_count(xml_path: str) -> List[Dict[str, str]]:
 
     Returns:
         List of dictionaries containing step count records with keys:
-        - startDate: Start time of the record
-        - endDate: End time of the record
-        - value: Step count value
+        - startDate: Start time of the record (required)
+        - endDate: End time of the record (required)
+        - value: Step count value (required)
 
     Raises:
         FileNotFoundError: If XML file doesn't exist
         ET.ParseError: If XML is malformed
+
+    Note:
+        Records with missing required fields are skipped to preserve
+        data integrity (INV-1).
     """
     step_count_records = []
 
@@ -32,10 +36,27 @@ def parse_step_count(xml_path: str) -> List[Dict[str, str]]:
 
         # Filter for StepCount records
         if record_type == "HKQuantityTypeIdentifierStepCount":
-            step_record = {
-                "startDate": record.get("startDate", ""),
-                "endDate": record.get("endDate", ""),
-                "value": record.get("value", ""),
+            # Extract required fields - do NOT use defaults (INV-1)
+            start_date: Optional[str] = record.get("startDate")
+            end_date: Optional[str] = record.get("endDate")
+            value: Optional[str] = record.get("value")
+
+            # Skip records with missing required fields (data integrity)
+            if None in (start_date, end_date, value):
+                # Skip invalid records rather than inserting fake data
+                continue
+
+            # Type narrowing: we know all values are non-None here
+            # Use assert to help mypy understand the type narrowing
+            assert start_date is not None
+            assert end_date is not None
+            assert value is not None
+
+            # All fields present - create record with definite str types
+            step_record: Dict[str, str] = {
+                "startDate": start_date,
+                "endDate": end_date,
+                "value": value,
             }
             step_count_records.append(step_record)
 
