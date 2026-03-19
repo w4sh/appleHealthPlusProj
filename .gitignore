@@ -69,3 +69,4 @@ data/
 # Temporary
 *.tmp
 *.bak
+.venv/
