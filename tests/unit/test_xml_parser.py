@@ -1,6 +1,7 @@
 """Unit tests for XML parser."""
 
 import pytest
+
 from src.ingestion.xml_parser import parse_step_count
 
 

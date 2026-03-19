@@ -1,24 +1,90 @@
-id: "TASK-001A"
-type: "feature"
-title: "Parse StepCount from Apple Health XML"
-description: "实现最小可用的 XML 解析器，仅提取 StepCount 数据"
-input: "Apple Health export.xml 文件（位于 data/raw/）"
-output: "StepCount 记录列表（Python 数据结构）"
-constraints:
-  - 必须遵循 INV-1（数据完整性）
-  - 必须遵循 INV-5（基础类型安全）
-  - 不修改原始 XML 文件
-acceptance_criteria:
-  - 能解析至少 1 条 StepCount 数据
-  - 返回结构为 list[dict] 或 list[dataclass]
-  - 包含 startDate, endDate, value
-  - 至少 1 个单元测试通过
-  - lint-all.sh 可执行（不要求全通过）
-affected_modules:
-  - src/ingestion/xml_parser.py
-  - tests/unit/test_xml_parser.py
-priority: "P0"
-owner_role: "coder"
-status: "pending"
-created_at: "2026-03-19"
-updated_at: "2026-03-19"
+# TASK-001A: Parse StepCount from Apple Health XML
+
+## 元数据
+- **类型**: feature
+- **优先级**: P0
+- **负责人**: coder
+- **状态**: pending
+- **创建日期**: 2026-03-19
+- **更新日期**: 2026-03-19
+
+## 用户故事
+作为 数据处理系统, 我想要解析 StepCount 数据, 以便进行基础统计分析
+
+## 描述
+实现一个最小可用的 XML 解析器，仅提取 StepCount 数据。这是整个数据管道的入口任务，目标是验证系统可以完成“解析 → 测试 → lint → 评分”的完整闭环。
+
+## 输入
+- 原始数据: `data/raw/export.xml`
+- 数据格式: Apple Health XML
+- 前置条件:
+  - export.xml 存在
+  - 文件未被修改（INV-1）
+
+## 输出
+- 函数:
+  - `parse_step_count(xml_path: str) -> List[dict]`
+- 数据结构:
+  - `{startDate, endDate, value}`
+- 测试:
+  - `tests/unit/test_xml_parser.py`
+
+## 约束
+- 必须遵循 INV-1（数据完整性）
+- 必须遵循 INV-5（基础类型安全）
+- 不得修改原始 XML
+- 不引入复杂依赖（保持最小实现）
+
+## 验收标准（质量标准）
+
+### 功能正确性
+- [ ] 能解析至少 1 条 StepCount 数据
+- [ ] 返回结构为 list[dict]
+- [ ] 包含 startDate, endDate, value
+
+### 类型与结构
+- [ ] 函数具备类型注解
+- [ ] 返回结构一致
+
+### 测试质量
+- [ ] 至少 1 个单元测试通过
+- [ ] pytest 无错误
+
+### 工程质量
+- [ ] lint-all.sh 可执行
+- [ ] 无 syntax error
+
+### 系统指标
+- [ ] score.sh 成功运行
+- [ ] score ≥ 当前 baseline（允许低分）
+
+## 受影响的模块
+- `src/ingestion/xml_parser.py`（新增）
+- `tests/unit/test_xml_parser.py`（新增）
+
+## 技术方案
+
+### 解析方式
+- 使用 `xml.etree.ElementTree`
+- 遍历 `<Record>` 节点
+
+### 过滤逻辑
+- type == `HKQuantityTypeIdentifierStepCount`
+
+### 数据提取
+- startDate
+- endDate
+- value
+
+### 输出结构
+- List[dict]
+
+## 实现计划
+1. 创建 ingestion 目录
+2. 实现基础 XML 解析
+3. 添加 StepCount 过滤
+4. 返回结构化数据
+5. 编写最小测试
+
+## 相关任务
+- 后续: TASK-001B

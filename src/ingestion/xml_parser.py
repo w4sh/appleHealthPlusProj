@@ -1,7 +1,7 @@
 """XML parser for Apple Health data."""
 
 import xml.etree.ElementTree as ET
-from typing import List, Dict
+from typing import Dict, List
 
 
 def parse_step_count(xml_path: str) -> List[Dict[str, str]]:
