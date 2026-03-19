@@ -33,9 +33,9 @@ def parse_step_count(xml_path: str) -> List[Dict[str, str]]:
         # Filter for StepCount records
         if record_type == "HKQuantityTypeIdentifierStepCount":
             step_record = {
-                "startDate": record.get("startDate"),
-                "endDate": record.get("endDate"),
-                "value": record.get("value"),
+                "startDate": record.get("startDate", ""),
+                "endDate": record.get("endDate", ""),
+                "value": record.get("value", ""),
             }
             step_count_records.append(step_record)
 
