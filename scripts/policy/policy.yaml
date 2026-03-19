@@ -1,0 +1,230 @@
+# 质量策略定义
+# 定义所有可强制执行的约束和评分权重
+
+# 策略版本
+version: "1.0.0"
+baseline_score: 70.0
+
+# 检查项定义
+checks:
+  # 架构检查
+  arch-data-integrity:
+    name: "数据完整性检查"
+    description: "验证原始数据未被修改"
+    category: "arch"
+    weight: 10
+    script: "scripts/checks/arch/data-integrity.sh"
+    auto_fix: false
+    severity: "critical"
+
+  arch-schema-first:
+    name: "Schema 优先检查"
+    description: "验证代码从 Schema 生成"
+    category: "arch"
+    weight: 8
+    script: "scripts/checks/arch/schema-first.sh"
+    auto_fix: false
+    severity: "high"
+
+  arch-idempotency:
+    name: "幂等性检查"
+    description: "验证重复执行产生相同结果"
+    category: "arch"
+    weight: 8
+    script: "scripts/checks/arch/idempotency.sh"
+    auto_fix: false
+    severity: "high"
+
+  arch-traceability:
+    name: "可追溯性检查"
+    description: "验证所有输出包含元数据"
+    category: "arch"
+    weight: 7
+    script: "scripts/checks/arch/traceability.sh"
+    auto_fix: false
+    severity: "medium"
+
+  arch-type-safety:
+    name: "类型安全检查"
+    description: "验证使用严格类型检查"
+    category: "arch"
+    weight: 7
+    script: "scripts/checks/arch/type-safety.sh"
+    auto_fix: false
+    severity: "high"
+
+  # 代码检查
+  code-test-coverage:
+    name: "测试覆盖率检查"
+    description: "验证测试覆盖率 ≥ 80%"
+    category: "code"
+    weight: 15
+    script: "scripts/checks/code/test-coverage.sh"
+    auto_fix: false
+    severity: "high"
+    threshold: 80
+
+  code-type-check:
+    name: "类型检查"
+    description: "运行 mypy 严格模式"
+    category: "code"
+    weight: 10
+    script: "scripts/checks/code/type-check.sh"
+    auto_fix: false
+    severity: "high"
+
+  code-lint:
+    name: "代码规范检查"
+    description: "运行 pylint 和 flake8"
+    category: "code"
+    weight: 8
+    script: "scripts/checks/code/lint.sh"
+    auto_fix: true
+    severity: "medium"
+
+  code-format:
+    name: "代码格式检查"
+    description: "验证代码格式符合 black"
+    category: "code"
+    weight: 5
+    script: "scripts/checks/code/format.sh"
+    auto_fix: true
+    severity: "low"
+
+  code-imports:
+    name: "导入顺序检查"
+    description: "验证导入顺序符合 isort"
+    category: "code"
+    weight: 2
+    script: "scripts/checks/code/imports.sh"
+    auto_fix: true
+    severity: "low"
+
+  code-hardcoded-paths:
+    name: "硬编码路径检查"
+    description: "检查无硬编码绝对路径"
+    category: "code"
+    weight: 5
+    script: "scripts/checks/code/hardcoded-paths.sh"
+    auto_fix: false
+    severity: "medium"
+
+  code-memory-usage:
+    name: "内存使用检查"
+    description: "验证大文件处理内存合理"
+    category: "code"
+    weight: 5
+    script: "scripts/checks/code/memory-usage.sh"
+    auto_fix: false
+    severity: "medium"
+
+  # QA 检查
+  qa-documentation:
+    name: "文档完整性检查"
+    description: "验证公共接口有文档字符串"
+    category: "qa"
+    weight: 5
+    script: "scripts/checks/qa/documentation.sh"
+    auto_fix: false
+    severity: "low"
+
+  qa-known-issues:
+    name: "已知问题检查"
+    description: "验证无未修复的严重问题"
+    category: "qa"
+    weight: 5
+    script: "scripts/checks/qa/known-issues.sh"
+    auto_fix: false
+    severity: "high"
+
+# 评分权重
+category_weights:
+  arch: 40  # 架构合规 40%
+  code: 30  # 代码质量 30%
+  qa: 20    # QA 检查 20%
+  docs: 10  # 文档完整 10%
+
+# 严重级别定义
+severity_levels:
+  critical:
+    score_penalty: 100  # 阻止发布
+    must_fix: true
+  high:
+    score_penalty: 20
+    must_fix: true
+  medium:
+    score_penalty: 10
+    must_fix: false
+  low:
+    score_penalty: 5
+    must_fix: false
+
+# 质量门禁
+quality_gates:
+  minimum_score: 70.0
+  required_checks:
+    - arch-data-integrity
+    - arch-type-safety
+    - code-test-coverage
+  blocked_by:
+    - severity: "critical"
+    - severity: "high"  # 如果是 high 且 must_fix
+
+# 评分计算示例
+scoring_examples:
+  - name: "完美状态"
+    checks:
+      arch-data-integrity: 10
+      arch-schema-first: 8
+      arch-idempotency: 8
+      arch-traceability: 7
+      arch-type-safety: 7
+      code-test-coverage: 15
+      code-type-check: 10
+      code-lint: 8
+      code-format: 5
+      code-imports: 2
+      code-hardcoded-paths: 5
+      code-memory-usage: 5
+      qa-documentation: 5
+      qa-known-issues: 5
+    total: 107  # 超过 100 分
+    normalized: 100
+
+  - name: "良好状态"
+    checks:
+      arch-data-integrity: 10
+      arch-schema-first: 8
+      arch-idempotency: 4  # 部分通过
+      arch-traceability: 7
+      arch-type-safety: 7
+      code-test-coverage: 12  # 75% 覆盖率
+      code-type-check: 10
+      code-lint: 8
+      code-format: 5
+      code-imports: 2
+      code-hardcoded-paths: 5
+      code-memory-usage: 5
+      qa-documentation: 3  # 部分缺失
+      qa-known-issues: 5
+    total: 91
+    normalized: 91
+
+  - name: "及格状态"
+    checks:
+      arch-data-integrity: 10
+      arch-schema-first: 8
+      arch-idempotency: 0  # 未实现
+      arch-traceability: 0  # 未实现
+      arch-type-safety: 7
+      code-test-coverage: 10  # 60% 覆盖率
+      code-type-check: 10
+      code-lint: 6  # 有警告
+      code-format: 5
+      code-imports: 2
+      code-hardcoded-paths: 0  # 有硬编码
+      code-memory-usage: 5
+      qa-documentation: 2  # 缺失较多
+      qa-known-issues: 5
+    total: 70
+    normalized: 70
